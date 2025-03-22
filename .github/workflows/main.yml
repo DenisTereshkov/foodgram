@@ -65,15 +65,11 @@ jobs:
       #     context: ./frontend/
       #     push: true
       #     tags: denistereshkov/foodgram_frontend:latest
-      - name: Build and push
-        if: success()      
-        run: |
-          docker build -t denistereshkov/foodgram_frontend:latest ./frontend/
+      - name: Build    
+        run: docker build -t denistereshkov/foodgram_frontend:latest ./frontend/
           
-      - name: Docker Push
-        if: success()      
-        run: |
-          docker push denistereshkov/foodgram_frontend:latest
+      - name: Docker Push     
+        run: docker push denistereshkov/foodgram_frontend:latest
 
   build_gateway_and_push_to_docker_hub:
     name: Push gateway Docker image to DockerHub
