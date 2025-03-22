@@ -2,7 +2,7 @@
 FROM node:21.7.1-alpine
 WORKDIR /app
 COPY package*.json ./
-RUN /bin/bash
+RUN npm validate
 RUN npm install 
 COPY . ./
 RUN npm run build
