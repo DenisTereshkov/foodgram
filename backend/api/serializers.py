@@ -56,6 +56,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
             'last_name',
             'password',
         )
+        model = User
 
     def create(self, validated_data):
         password = validated_data.pop('password')

@@ -35,6 +35,7 @@ from .serializers import (
     ShoppingCartSerializer,
     ShortRecipeSerializer,
     TagSerializer,
+    UserCreateSerializer,
     UserSerializer
 )
 from users.models import Follow
@@ -210,7 +211,9 @@ class FoodgramUserViewSet(UserViewSet):
         print(self.permission_classes)
         if self.action == "set_password":
             return SetPasswordSerializer
-        return UserSerializer
+        if self.request.method == "GET":
+            return UserSerializer
+        return UserCreateSerializer
 
     @action(detail=False, url_path='me', permission_classes=[IsAuthenticated,])
     def me(self, request):
