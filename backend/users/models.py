@@ -35,12 +35,12 @@ class User(AbstractUser):
         null=False,
         verbose_name='Фамилия',
     )
-    password = models.CharField(
-        max_length=LENGTH_USERNAME,
-        blank=False,
-        null=False,
-        verbose_name='Пароль',
-    )
+    # password = models.CharField(
+    #     max_length=LENGTH_USERNAME,
+    #     blank=False,
+    #     null=False,
+    #     verbose_name='Пароль',
+    # )
     avatar = models.ImageField(
         upload_to='users/',
         null=True,
@@ -48,9 +48,9 @@ class User(AbstractUser):
         verbose_name='Аватар',
     )
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'first_name', 'last_name', 'password']
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
-    class Meta:
+    class Meta(AbstractUser.Meta):
         ordering = ['-id']
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'

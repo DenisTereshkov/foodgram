@@ -204,7 +204,7 @@ class FoodgramUserViewSet(UserViewSet):
     def get_permissions(self):
         if self.action == 'me':
             return [IsAuthenticated(),]
-        return [IsAuthenticatedOrReadOnly(),]
+        return super().get_permissions()
 
     def get_serializer_class(self):
         print(self.permission_classes)

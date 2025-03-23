@@ -43,6 +43,28 @@ class AvatarSerializer(serializers.ModelSerializer):
         fields = ('avatar',)
 
 
+class UserCreateSerializer(serializers.ModelSerializer):
+    """Сериализатор для создания пользователей."""
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'password',
+        )
+
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        user = User.objects.create(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
+
+
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для модели пользователей."""
     is_subscribed = serializers.SerializerMethodField()
