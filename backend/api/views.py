@@ -9,6 +9,7 @@ from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (
+    AllowAny,
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
 )
@@ -26,6 +27,7 @@ from recipes.models import (
 from .permissions import AuthorOrReadOnly
 from .paginators import LimitPaginator
 from .serializers import (
+    AvatarSerializer,
     CreateRecipeSerializer,
     IngredientSerializer,
     FavoriteRecipeSerializer,
@@ -197,21 +199,24 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
 
 
-class FoodgramUserViewSet(UserViewSet):
+class FoodgramUserViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с пользователями."""
     pagination_class = LimitPaginator
-    permission_classes = [IsAuthenticatedOrReadOnly()]
+    permission_classes = [AllowAny, ]
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
     def get_permissions(self):
-        if self.action == 'me':
+        print(self.permission_classes)
+        if self.action in ['me', 'set_password']:
             return [IsAuthenticated(),]
         return super().get_permissions()
 
     def get_serializer_class(self):
         print(self.permission_classes)
-        if self.action == "set_password":
+        if self.action == 'set_password':
             return SetPasswordSerializer
-        if self.request.method == "GET":
+        if self.request.method == 'GET':
             return UserSerializer
         return UserCreateSerializer
 
@@ -229,7 +234,8 @@ class FoodgramUserViewSet(UserViewSet):
     def user_avatar(self, request):
         user = self.request.user
         if request.method == 'PUT':
-            serializer = self.get_serializer_class(user, data=request.data)
+            serializer = AvatarSerializer(request.user, data=request.data)
+            serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         user.avatar.delete()
@@ -287,3 +293,4 @@ class FoodgramUserViewSet(UserViewSet):
             subscriptions, many=True, context={"request": request}
         )
         return Response(serializer.data)
+

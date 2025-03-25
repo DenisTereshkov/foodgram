@@ -330,6 +330,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         )
 
     def validate_items(self, items, item_model, item_name):
+        print(items)
         if not items:
             raise serializers.ValidationError(
                 {item_name: f'Поле {item_name} не может быть пустым'})
@@ -349,12 +350,17 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
             )
         ingredients_id = [ingredient['id'] for ingredient in ingredients]
         tags = data.get('tags')
+        if not tags:
+            raise serializers.ValidationError(
+                {'tags': 'Поле tags не может быть пустым.'}
+            )
+        tags_id = [tag.id for tag in tags]
         self.validate_items(
             items=ingredients_id,
             item_model=Ingredient,
             item_name='ingredients'
         )
-        self.validate_items(items=tags, item_model=Tag, item_name='tags')
+        self.validate_items(items=tags_id, item_model=Tag, item_name='tags')
         return data
 
     def to_representation(self, instance):
@@ -378,7 +384,9 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.update({'author': self.context.get('request').user})
         ingredients = validated_data.pop('ingredients')
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
         tags = validated_data.pop('tags')
+        print(tags)
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         self.create_ingredients(ingredients=ingredients, recipe=recipe)
