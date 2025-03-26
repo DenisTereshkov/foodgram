@@ -5,7 +5,6 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.serializers import SetPasswordSerializer
-from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (
@@ -293,4 +292,3 @@ class FoodgramUserViewSet(viewsets.ModelViewSet):
             subscriptions, many=True, context={"request": request}
         )
         return Response(serializer.data)
-
