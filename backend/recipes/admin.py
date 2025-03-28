@@ -3,7 +3,7 @@ from django.contrib import admin
 from .models import Amount, Ingredient, Recipe, Tag
 
 
-class AmountAdmin(admin.StackedInline):
+class AmountAdmin(admin.ModelAdmin):
     model = Amount
     fields = ('recipe', 'ingredient', 'amount')
 
