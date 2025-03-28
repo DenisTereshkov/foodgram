@@ -3,8 +3,9 @@ from django.contrib import admin
 from .models import Amount, Ingredient, Recipe, Tag
 
 
-class AmountAdmin(admin.ModelAdmin):
-    ...
+class AmountAdmin(admin.StackedInline):
+    model = Amount
+    fields = ('recipe', 'ingredient', 'amount')
 
 
 class IngredientAdmin(admin.ModelAdmin):
@@ -42,7 +43,7 @@ class TagAdmin(admin.ModelAdmin):
 
 
 admin.site.empty_value_display = '(None)'
-admin.site.register(Amount)
+admin.site.register(Amount, AmountAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Tag, TagAdmin)
