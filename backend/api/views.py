@@ -208,7 +208,7 @@ class FoodgramUserViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         print(self.permission_classes)
         if self.action in ['me', 'set_password']:
-            return [IsAuthenticated(),]
+            return [IsAuthenticated(), ]
         return super().get_permissions()
 
     def get_serializer_class(self):
@@ -219,7 +219,11 @@ class FoodgramUserViewSet(viewsets.ModelViewSet):
             return UserSerializer
         return UserCreateSerializer
 
-    @action(detail=False, url_path='me', permission_classes=[IsAuthenticated,])
+    @action(
+        detail=False,
+        url_path='me',
+        permission_classes=[IsAuthenticated, ]
+    )
     def me(self, request):
         serializer = UserSerializer(request.user, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -228,7 +232,7 @@ class FoodgramUserViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=['put', 'delete'],
         url_path='me/avatar',
-        permission_classes=[IsAuthenticated,]
+        permission_classes=[IsAuthenticated, ]
     )
     def user_avatar(self, request):
         user = self.request.user
@@ -244,7 +248,7 @@ class FoodgramUserViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=['post', 'delete'],
         url_path=r'(?P<id>\d+)/subscribe',
-        permission_classes=[IsAuthenticated,]
+        permission_classes=[IsAuthenticated, ]
     )
     def subscribe(self, request, id):
         user = self.request.user
