@@ -138,6 +138,11 @@ class Amount(models.Model):
             ),
         )
 
+    def __str__(self):
+        return (f'{self.ingredient.name} {self.amount}'
+                f'{self.ingredient.measurement_unit} '
+                f'Рецепт: {self.recipe.name}')
+
     def save(self, *args, **kwargs):
         try:
             super().save(*args, **kwargs)
