@@ -29,7 +29,7 @@ class UserAdmin(BaseUserAdmin):
     @admin.display(description='Подписчики')
     def followers_count(self, obj):
         return Follow.objects.filter(user=obj).count()
-    
+
     @admin.display(description='Всего рецептов')
     def recipes_count(self, obj):
         return Recipe.objects.filter(author=obj).count()
