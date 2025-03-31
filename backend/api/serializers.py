@@ -155,6 +155,18 @@ class FollowCreateDeleteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Нельзя подписываться на самого себя!'
             )
+
+        has_following = Follow.objects.filter(
+            is_following=data.get('is_following'),
+            user=data.get('user')
+        ).exists()
+        request = self.context.get('request')
+        if request.method == 'POST':
+            if has_following:
+                raise serializers.ValidationError('Вы уже подписаны')
+            return data
+        if not has_following:
+            raise serializers.ValidationError('Вы уже не подписаны')
         return data
 
     def to_representation(self, instance):
@@ -361,6 +373,14 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
             item_name='ingredients'
         )
         self.validate_items(items=tags_id, item_model=Tag, item_name='tags')
+        request = self.context.get('request')
+        user = data.get('user')
+        recipe = data.get('recipe')
+        self.validate_repeated_request(
+            recipe=recipe,
+            request=request,
+            checking_method=user.favorite
+        )
         return data
 
     def to_representation(self, instance):
@@ -384,9 +404,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.update({'author': self.context.get('request').user})
         ingredients = validated_data.pop('ingredients')
-        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
         tags = validated_data.pop('tags')
-        print(tags)
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         self.create_ingredients(ingredients=ingredients, recipe=recipe)
@@ -408,12 +426,19 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = FavoriteRecipe
         fields = ('user', 'recipe')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=FavoriteRecipe.objects.all(),
-                fields=('user', 'recipe')
-            )
-        ]
+
+    def validate(self, data):
+        favorite_exist = data.get('user').favorite.filter(
+            recipe=data.get('recipe')
+        ).exists()
+        request = self.context.get('request')
+        if request.method == 'POST':
+            if favorite_exist:
+                raise serializers.ValidationError('Рецепт уже в избранном!')
+            return data
+        if not favorite_exist:
+            raise serializers.ValidationError('Рецепта нет в избранном!')
+        return data
 
     def to_representation(self, instance):
         return ShortRecipeSerializer(instance.recipe).data
@@ -430,6 +455,19 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
                 fields=('user', 'recipe')
             )
         ]
+
+    def validate(self, data):
+        recipe_in_cart_exist = data.get('user').shopping_cart.filter(
+            recipe=data.get('recipe')
+        ).exists()
+        request = self.context.get('request')
+        if request.method == 'POST':
+            if recipe_in_cart_exist:
+                raise serializers.ValidationError('Рецепт уже в корзине!!')
+            return data
+        if not recipe_in_cart_exist:
+            raise serializers.ValidationError('Рецепта нет корзине!')
+        return data
 
     def to_representation(self, instance):
         return ShortRecipeSerializer(instance.recipe).data

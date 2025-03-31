@@ -82,41 +82,46 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return ShortRecipeSerializer
         return CreateRecipeSerializer
 
+    @staticmethod
+    def create_delete_favorite_or_cart(
+        request,
+        pk,
+        serializer,
+        model,
+        response_text
+    ):
+        recipe = get_object_or_404(Recipe, id=pk)
+        user = request.user
+        serializer = serializer(
+            data={
+                'user': user.id,
+                'recipe': recipe.id
+            },
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        if request.method == 'POST':
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        model.objects.get(recipe=recipe).delete()
+        return Response(
+            response_text,
+            status=status.HTTP_204_NO_CONTENT
+        )
+
     @action(
         detail=True,
         methods=['post', 'delete'],
         permission_classes=[IsAuthenticated]
     )
     def favorite(self, request, pk):
-        recipe = get_object_or_404(Recipe, id=pk)
-        user = self.request.user
-        if request.method == 'POST':
-            if user.favorite.filter(recipe=recipe).exists():
-                return Response(
-                    {'errors': 'Рецепт уже в избранном!'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            serializer = FavoriteRecipeSerializer(
-                data={
-                    'user': user.id,
-                    'recipe': recipe.id
-                },
-                context={'request': request}
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            if not user.favorite.filter(recipe=recipe).exists():
-                return Response(
-                    {'errors': 'Рецепта уже нет в избранном'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            FavoriteRecipe.objects.get(recipe=recipe).delete()
-            return Response(
-                'Рецепт удалён из избранного.',
-                status=status.HTTP_204_NO_CONTENT
-            )
+        return self.create_delete_favorite_or_cart(
+            request=request,
+            pk=pk,
+            serializer=FavoriteRecipeSerializer,
+            model=FavoriteRecipe,
+            response_text='Рецепт удалён из избранного.'
+        )
 
     @action(
         detail=True,
@@ -124,35 +129,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def shopping_cart(self, request, pk):
-        recipe = get_object_or_404(Recipe, id=pk)
-        user = self.request.user
-        if request.method == 'POST':
-            if user.shopping_cart.filter(recipe=recipe).exists():
-                return Response(
-                    {'errors': 'Рецепт уже в корзине!'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            serializer = ShoppingCartSerializer(
-                data={
-                    'user': user.id,
-                    'recipe': recipe.id
-                },
-                context={'request': request}
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            if not user.shopping_cart.filter(recipe=recipe).exists():
-                return Response(
-                    'Рецепта нет в корзине',
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            ShoppingCart.objects.get(recipe=recipe).delete()
-            return Response(
-                'Рецепт удалён из корзины.',
-                status=status.HTTP_204_NO_CONTENT
-            )
+        return self.create_delete_favorite_or_cart(
+            request=request,
+            pk=pk,
+            serializer=ShoppingCartSerializer,
+            model=ShoppingCart,
+            response_text='Рецепт удалён из корзины.',
+        )
 
     @action(
         methods=['get'],
@@ -206,13 +189,11 @@ class FoodgramUserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
     def get_permissions(self):
-        print(self.permission_classes)
         if self.action in ['me', 'set_password']:
             return [IsAuthenticated(), ]
         return super().get_permissions()
 
     def get_serializer_class(self):
-        print(self.permission_classes)
         if self.action == 'set_password':
             return SetPasswordSerializer
         if self.request.method == 'GET':
@@ -257,25 +238,16 @@ class FoodgramUserViewSet(viewsets.ModelViewSet):
             is_following=following,
             user=user
         )
+        serializer = FollowCreateDeleteSerializer(
+            data={'user': user.id, 'is_following': following.id},
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
         if request.method == 'POST':
-            if has_following.exists():
-                return Response('Вы уже подписаны',
-                                status=status.HTTP_400_BAD_REQUEST)
-            serializer = FollowCreateDeleteSerializer(
-                data={'user': user.id, 'is_following': following.id},
-                context={'request': request}
-            )
-            serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            if has_following:
-                has_following.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response(
-                'Вы уже не подписаны',
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        has_following.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,
