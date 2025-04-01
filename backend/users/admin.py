@@ -3,7 +3,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from users.models import Follow
-from recipes.models import Recipe
 User = get_user_model()
 
 
@@ -28,11 +27,11 @@ class UserAdmin(BaseUserAdmin):
 
     @admin.display(description='Подписчики')
     def followers_count(self, obj):
-        return Follow.objects.filter(user=obj).count()
+        return obj.is_following.count()
 
     @admin.display(description='Всего рецептов')
     def recipes_count(self, obj):
-        return Recipe.objects.filter(author=obj).count()
+        return obj.recipes.count()
 
 
 @admin.register(Follow)

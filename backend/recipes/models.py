@@ -71,18 +71,15 @@ class Recipe(NameModel):
     tags = models.ManyToManyField(
         Tag,
         blank=False,
-        related_name='posts',
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='posts'
     )
     ingredients = models.ManyToManyField(
         Ingredient,
         through='Amount',
         blank=False,
-        related_name='posts',
         verbose_name='Ингредиент',
     )
     image = models.ImageField(
