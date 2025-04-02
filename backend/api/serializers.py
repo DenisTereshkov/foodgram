@@ -8,7 +8,6 @@ from django.core.validators import (
 )
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 
 from backend.constant import MAX_AMOUNT, MIN_COOKING_TIME, MIN_AMOUNT
 from recipes.models import (
@@ -141,13 +140,6 @@ class FollowCreateDeleteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Follow
         fields = 'user', 'is_following'
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Follow.objects.all(),
-                fields=('user', 'is_following'),
-                message='Вы уже подписаны на этого пользователя'
-            )
-        ]
 
     def validate(self, data):
         request = self.context.get('request')
@@ -373,14 +365,6 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
             item_name='ingredients'
         )
         self.validate_items(items=tags_id, item_model=Tag, item_name='tags')
-        request = self.context.get('request')
-        user = data.get('user')
-        recipe = data.get('recipe')
-        self.validate_repeated_request(
-            recipe=recipe,
-            request=request,
-            checking_method=user.favorite
-        )
         return data
 
     def to_representation(self, instance):
@@ -449,18 +433,14 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShoppingCart
         fields = ('user', 'recipe')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=ShoppingCart.objects.all(),
-                fields=('user', 'recipe')
-            )
-        ]
 
     def validate(self, data):
         recipe_in_cart_exist = data.get('user').shopping_cart.filter(
             recipe=data.get('recipe')
         ).exists()
         request = self.context.get('request')
+        print(request.method)
+        print(recipe_in_cart_exist)
         if request.method == 'POST':
             if recipe_in_cart_exist:
                 raise serializers.ValidationError('Рецепт уже в корзине!!')
