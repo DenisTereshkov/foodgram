@@ -150,7 +150,7 @@ class FollowCreateDeleteSerializer(serializers.ModelSerializer):
             )
         has_following = Follow.objects.filter(
             is_following=data.get('is_following'),
-            user=data.get('user')
+            user=request.user
         ).exists()
         request = self.context.get('request')
         if request.method == 'POST':
@@ -162,6 +162,7 @@ class FollowCreateDeleteSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
+        print(instance.is_following)
         request = self.context.get('request')
         return FollowSerializer(
             instance.is_following,
