@@ -104,6 +104,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         model.objects.get(recipe=recipe).delete()
+        print('111111111111111111111111111111111111111111')
         return Response(
             response_text,
             status=status.HTTP_204_NO_CONTENT
@@ -129,13 +130,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def shopping_cart(self, request, pk):
-        return self.create_delete_favorite_or_cart(
+        shopping_cart = self.create_delete_favorite_or_cart(
             request=request,
             pk=pk,
             serializer=ShoppingCartSerializer,
             model=ShoppingCart,
             response_text='Рецепт удалён из корзины.',
         )
+        print('2222222222222222222222222222')
+        return shopping_cart
 
     @action(
         methods=['get'],

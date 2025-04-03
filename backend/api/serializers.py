@@ -439,8 +439,6 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
             recipe=data.get('recipe')
         ).exists()
         request = self.context.get('request')
-        print(request.method)
-        print(recipe_in_cart_exist)
         if request.method == 'POST':
             if recipe_in_cart_exist:
                 raise serializers.ValidationError('Рецепт уже в корзине!!')
