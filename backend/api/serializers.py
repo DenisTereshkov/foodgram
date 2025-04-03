@@ -84,7 +84,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
-        return user.is_authenticated and user.is_following.filter(
+        return user.is_authenticated and Follow.objects.filter(
+            user=user,
             is_following=obj
         ).exists()
 
@@ -147,7 +148,6 @@ class FollowCreateDeleteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Нельзя подписываться на самого себя!'
             )
-
         has_following = Follow.objects.filter(
             is_following=data.get('is_following'),
             user=data.get('user')
@@ -334,7 +334,6 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         )
 
     def validate_items(self, items, item_model, item_name):
-        print(items)
         if not items:
             raise serializers.ValidationError(
                 {item_name: f'Поле {item_name} не может быть пустым'})
