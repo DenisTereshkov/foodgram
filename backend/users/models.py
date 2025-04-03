@@ -90,6 +90,6 @@ class Follow(models.Model):
             raise ValidationError(
                 'Пользователь не может подписываться сам на себя.'
             )
-    
+
     def __str__(self):
         return f'{self.user} подписан на {self.is_following}'
