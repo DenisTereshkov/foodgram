@@ -232,21 +232,30 @@ class FoodgramUserViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated, ]
     )
     def subscribe(self, request, id):
-        user = self.request.user
+        user = request.user
         following = get_object_or_404(User, pk=id)
+        print(111111111111111111111111111111111111111111111111111)
+        print(user)
+        print(following)
         has_following = Follow.objects.filter(
             is_following=following,
             user=user
         )
+        print(has_following)
+        print(22222222222222222222222222222222222222222222222)
         serializer = FollowCreateDeleteSerializer(
             data={'user': user.id, 'is_following': following.id},
             context={'request': request}
         )
+        print(333333333333333333333333333333333333333333333)
         serializer.is_valid(raise_exception=True)
+        print(44444444444444444444444444444444444444444444)
         if request.method == 'POST':
             serializer.save()
+            print(55555555555555555555555555555555555555555555)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         has_following.delete()
+        print(666666666666666666666666666666666666666666666666666)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
