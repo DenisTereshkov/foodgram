@@ -26,6 +26,7 @@ User = get_user_model()
 class Base64ImageField(serializers.ImageField):
     """Сериализатор для изображений."""
     def to_internal_value(self, data):
+        """Преобразует данные из формата Base64 в объект изображения."""
         if isinstance(data, str) and data.startswith('data:image'):
             format, imgstr = data.split(';base64,')
             ext = format.split('/')[-1]
@@ -58,6 +59,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         model = User
 
     def create(self, validated_data):
+        """Создает нового пользователя с заданными данными."""
         password = validated_data.pop('password')
         user = User.objects.create(**validated_data)
         user.set_password(password)
@@ -83,6 +85,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
 
     def get_is_subscribed(self, obj):
+        """Проверяет, подписан ли текущий пользователь на данного."""
         user = self.context.get('request').user
         return user.is_authenticated and Follow.objects.filter(
             user=user,
@@ -121,6 +124,7 @@ class FollowSerializer(UserSerializer):
         )
 
     def get_recipes(self, obj):
+        """Возвращает рецепты автора с учетом лимита."""
         request = self.context.get('request')
         recipes_limit = request.query_params.get('recipes_limit', None)
         recipes = Recipe.objects.filter(author=obj)
@@ -133,6 +137,7 @@ class FollowSerializer(UserSerializer):
         ).data
 
     def get_recipes_count(self, obj):
+        """Возвращает количество рецептов автора."""
         return Recipe.objects.filter(author=obj).count()
 
 
@@ -143,6 +148,7 @@ class FollowCreateDeleteSerializer(serializers.ModelSerializer):
         fields = 'user', 'is_following'
 
     def validate(self, data):
+        """Проверяет корректность данных для подписки."""
         request = self.context.get('request')
         if request.user == data['is_following']:
             raise serializers.ValidationError(
@@ -162,6 +168,7 @@ class FollowCreateDeleteSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
+        """Возвращает сериализованные данные подписки."""
         print(instance.is_following)
         request = self.context.get('request')
         return FollowSerializer(
@@ -288,18 +295,21 @@ class RecipeSerializer(serializers.ModelSerializer):
         model = Recipe
 
     def get_is_favorited(self, obj):
+        """Проверяет, добавлен ли рецепт в избранное."""
         user = self.context.get('request').user
         return (user.is_authenticated and user.favorite.filter(
             recipe=obj
         ).exists())
 
     def get_is_in_shopping_cart(self, obj):
+        """Проверяет, находится ли рецепт в корзине покупок."""
         user = self.context.get('request').user
         return (user.is_authenticated and user.shopping_cart.filter(
             recipe=obj
         ).exists())
 
     def get_context(self):
+        """Возвращает контекст запроса."""
         return self.context.get('request')
 
 
@@ -335,6 +345,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         )
 
     def validate_items(self, items, item_model, item_name):
+        """Проверяет корректность элементов списка."""
         if not items:
             raise serializers.ValidationError(
                 {item_name: f'Поле {item_name} не может быть пустым'})
@@ -347,6 +358,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
                     {item_name: f'Объект с id {item} не существует'})
 
     def validate(self, data):
+        """Проверяет корректность данных перед сохранением."""
         ingredients = data.get('ingredients')
         if not ingredients:
             raise serializers.ValidationError(
@@ -368,9 +380,11 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
+        """Возвращает сериализованные данные рецепта."""
         return RecipeSerializer(instance, context=self.context).data
 
     def create_ingredients(self, ingredients, recipe):
+        """Создает объекты ингредиентов для рецепта."""
         ingredients_list = []
         for ingredient in ingredients:
             ingredients_list.append(
@@ -386,6 +400,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         Amount.objects.bulk_create(ingredients_list)
 
     def create(self, validated_data):
+        """Создает новый рецепт с заданными данными."""
         validated_data.update({'author': self.context.get('request').user})
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
@@ -395,6 +410,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
+        """Обновляет существующий рецепт."""
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         instance.save()
@@ -412,6 +428,7 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
         fields = ('user', 'recipe')
 
     def validate(self, data):
+        """Проверяет, существует ли рецепт в избранном."""
         favorite_exist = data.get('user').favorite.filter(
             recipe=data.get('recipe')
         ).exists()
@@ -425,6 +442,7 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
+        """Возвращает сериализованные данные избранного рецепта."""
         return ShortRecipeSerializer(instance.recipe).data
 
 
@@ -435,6 +453,7 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         fields = ('user', 'recipe')
 
     def validate(self, data):
+        """Проверяет, существует ли рецепт в корзине."""
         recipe_in_cart_exist = data.get('user').shopping_cart.filter(
             recipe=data.get('recipe')
         ).exists()
@@ -448,4 +467,5 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
+        """Возвращает сериализованные данные рецепта в корзине."""
         return ShortRecipeSerializer(instance.recipe).data

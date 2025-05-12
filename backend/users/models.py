@@ -7,7 +7,7 @@ from backend.constant import LENGTH_USERNAME, TEXT_LENGTH
 
 
 class User(AbstractUser):
-    """Модель пользователей."""
+    """Модель пользователей, расширяющая стандартную модель AbstractUser."""
     username = models.CharField(
         max_length=LENGTH_USERNAME,
         unique=True,
@@ -52,16 +52,18 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name', 'password']
 
     class Meta(AbstractUser.Meta):
+        """Meta-класс для настройки модели User."""
         ordering = ('username',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
     def __str__(self):
+        """Возвращает строковое представление пользователя."""
         return self.username
 
 
 class Follow(models.Model):
-    """Модель подписок."""
+    """Модель подписок, представляющая отношения между пользователями."""
     user = models.ForeignKey(
         User, on_delete=models.CASCADE,
         related_name='user',
@@ -75,6 +77,7 @@ class Follow(models.Model):
     )
 
     class Meta:
+        """Meta-класс для настройки модели Follow."""
         constraints = (
             models.UniqueConstraint(
                 fields=['user', 'is_following'],
@@ -86,10 +89,12 @@ class Follow(models.Model):
         verbose_name_plural = 'Подписки'
 
     def clean(self):
+        """Проверка на недопустимость подписки на самого себя."""
         if self.user == self.is_following:
             raise ValidationError(
                 'Пользователь не может подписываться сам на себя.'
             )
 
     def __str__(self):
+        """Возвращает строковое представление подписки."""
         return f'{self.user} подписан на {self.is_following}'

@@ -4,11 +4,13 @@ from .models import Amount, Ingredient, Recipe, Tag
 
 
 class AmountAdmin(admin.ModelAdmin):
+    """Администратор для модели Amount."""
     model = Amount
     fields = ('recipe', 'ingredient', 'amount')
 
 
 class IngredientAdmin(admin.ModelAdmin):
+    """Администратор для модели Ingredient."""
     list_display = (
         'name',
         'measurement_unit'
@@ -17,11 +19,13 @@ class IngredientAdmin(admin.ModelAdmin):
 
 
 class RecipeInline(admin.StackedInline):
+    """Встраиваемый интерфейс для Amount в Recipe."""
     model = Amount
     extra = 0
 
 
 class RecipeAdmin(admin.ModelAdmin):
+    """Администратор для модели Recipe."""
     inlines = (
         RecipeInline,
     )
@@ -31,11 +35,12 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @admin.display(description='Количество добавлений в избранное')
     def favorites_count(self, obj):
-        """Возвращает количество избранных."""
+        """Возвращает количество избранных рецептов."""
         return obj.favorite.count()
 
 
 class TagAdmin(admin.ModelAdmin):
+    """Администратор для модели Tag."""
     list_display = (
         'name',
         'slug'

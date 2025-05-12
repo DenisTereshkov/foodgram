@@ -19,6 +19,7 @@ class IngredientFilter(FilterSet):
 
 
 class RecipeFilter(FilterSet):
+    """Фильтр для рецептов по автору, тегам и статусу избранного."""
     author = filters.ModelChoiceFilter(
         queryset=User.objects.all())
     tags = filters.ModelMultipleChoiceFilter(
@@ -38,11 +39,13 @@ class RecipeFilter(FilterSet):
         fields = ('author', 'tags', 'is_favorited', 'is_in_shopping_cart')
 
     def get_is_favorited(self, queryset, name, value):
+        """Фильтрует рецепты по статусу избранного пользователя."""
         if self.request.user.is_authenticated:
             return queryset.filter(favorite__user=self.request.user)
         return queryset
 
     def get_is_in_shopping_cart(self, queryset, name, value):
+        """Фильтрует рецепты по статусу в корзине покупок пользователя."""
         if self.request.user.is_authenticated:
             return queryset.filter(shopping_cart__user=self.request.user)
         return queryset

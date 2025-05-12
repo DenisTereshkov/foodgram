@@ -73,9 +73,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
 
     def perform_create(self, serializer):
+        """Сохраняет рецепт с авторством текущего пользователя."""
         serializer.save(author=self.request.user)
 
     def get_serializer_class(self):
+        """Возвращает сериализатор в зависимости от действия."""
         if self.action in ('list', 'retrieve'):
             return RecipeSerializer
         if self.action in ('favorite', 'shopping_cart'):
@@ -90,6 +92,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
         model,
         response_text
     ):
+        """
+        Создает или удаляет рецепт из избранного или корзины.
+
+        Args:
+            request: HTTP запрос.
+            pk: ID рецепта.
+            serializer: Сериализатор для обработки данных.
+            model: Модель для работы с избранным или корзиной.
+            response_text: Текст ответа при удалении.
+
+        Returns:
+            Response: Ответ с данными или сообщением об удалении.
+        """
         recipe = get_object_or_404(Recipe, id=pk)
         user = request.user
         serializer = serializer(
@@ -115,6 +130,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def favorite(self, request, pk):
+        """Добавляет или удаляет рецепт из избранного."""
         return self.create_delete_favorite_or_cart(
             request=request,
             pk=pk,
@@ -129,6 +145,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def shopping_cart(self, request, pk):
+        """Добавляет или удаляет рецепт из корзины."""
         return self.create_delete_favorite_or_cart(
             request=request,
             pk=pk,
@@ -144,6 +161,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated],
     )
     def download_shopping_cart(self, request):
+        """Скачивает список покупок на основе содержимого корзины."""
         shopping_list = []
         shopping_cart_ingredients = (
             Amount.objects.filter(
@@ -169,7 +187,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, url_path="get-link")
     def get_link(self, request, pk=None):
-        """Получение короткой ссылки."""
+        """Получает короткую ссылку на рецепт."""
         recipe = get_object_or_404(Recipe, id=pk)
         return Response(
             {
@@ -189,11 +207,13 @@ class FoodgramUserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
     def get_permissions(self):
+        """Возвращает разрешения в зависимости от действия."""
         if self.action in ['me', 'set_password']:
             return [IsAuthenticated(), ]
         return super().get_permissions()
 
     def get_serializer_class(self):
+        """Возвращает сериализатор в зависимости от действия."""
         if self.action == 'set_password':
             return SetPasswordSerializer
         if self.request.method == 'GET':
@@ -206,6 +226,7 @@ class FoodgramUserViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated, ]
     )
     def me(self, request):
+        """Возвращает информацию о текущем пользователе."""
         serializer = UserSerializer(request.user, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -216,6 +237,7 @@ class FoodgramUserViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated, ]
     )
     def user_avatar(self, request):
+        """Обновляет или удаляет аватар текущего пользователя."""
         user = self.request.user
         if request.method == 'PUT':
             serializer = AvatarSerializer(request.user, data=request.data)
@@ -232,6 +254,7 @@ class FoodgramUserViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated, ]
     )
     def subscribe(self, request, id):
+        """Подписывает или отписывает пользователя от другого."""
         user = request.user
         following = get_object_or_404(User, pk=id)
         has_following = Follow.objects.filter(
@@ -255,6 +278,7 @@ class FoodgramUserViewSet(viewsets.ModelViewSet):
         url_path="subscriptions",
     )
     def subscriptions(self, request):
+        """Возвращает список подписок текущего пользователя."""
         subscriptions = User.objects.filter(
             is_following__user=self.request.user
         )

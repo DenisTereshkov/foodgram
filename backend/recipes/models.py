@@ -63,6 +63,8 @@ class Ingredient(NameModel):
         ]
 
     def __str__(self):
+        """Возвращает строковое представление объекта с именем."""
+
         return self.name
 
 
@@ -111,6 +113,8 @@ class Recipe(NameModel):
         ordering = ('-pub_date',)
 
     def __str__(self):
+        """Возвращает строковое представление объекта с именем."""
+
         return self.name
 
 
@@ -147,11 +151,16 @@ class Amount(models.Model):
         )
 
     def __str__(self):
+        """Возвращает строковое представление кол-ва ингредиента в рецепте."""
         return (f'{self.ingredient.name} {self.amount}'
                 f'{self.ingredient.measurement_unit} '
                 f'Рецепт: {self.recipe.name}')
 
     def save(self, *args, **kwargs):
+        """
+        Сохраняет объект.
+        Проверяет уникальность комбинации рецепта и ингредиента.
+        """
         try:
             super().save(*args, **kwargs)
         except IntegrityError:
@@ -184,6 +193,7 @@ class FavoriteRecipe(FavoriteShoppingCartBaseModel):
         )
 
     def __str__(self):
+        """Возвращает строковое представление избранного рецепта."""
         return self.recipe.name
 
 
@@ -202,4 +212,5 @@ class ShoppingCart(FavoriteShoppingCartBaseModel):
         )
 
     def __str__(self):
+        """Возвращает строковое представление рецепта в корзине."""
         return self.recipe.name
